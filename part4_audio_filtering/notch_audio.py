@@ -1,0 +1,17 @@
+"""Part 4 - Audio Filtering"""
+import numpy as np
+import matplotlib.pyplot as plt
+
+import config
+from common.io_utils import out_dir
+from common.plot_utils import save_fig
+
+
+def run():
+    out = out_dir(4)
+    # TODO: implement this part, save plots/files into `out`
+    print("Part 4 (Audio Filtering): not implemented yet")
+
+
+if __name__ == "__main__":
+    run()
