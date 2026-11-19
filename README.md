@@ -5,7 +5,8 @@ Python project covering mathematical signals, audio, and images.
 ## Setup
 
     python -m venv .venv
-    .\.venv\Scripts\Activate.ps1
+    .\.venv\Scripts\Activate.ps1   (Windows PowerShell)
+    source .venv/bin/activate      (Linux / macOS)
     pip install -r requirements.txt
 
 Copy the provided files into `data/` as `speech.wav` and `image.png` (or edit `config.py`).
@@ -22,7 +23,7 @@ Results (plots, WAV files) are saved in `outputs/part1 ... part6`.
 | Part | Topic | Student |
 |---|---|---|
 | 1 | Mathematical Signal & DTFT | |
-| 2 | Convolution & Difference Equations | |
+| 2 | Convolution & Difference Equations | Nour Hatem |
 | 3 | Audio Analysis | |
 | 4 | Audio Filtering | |
 | 5 | 2D Fourier & Image Filtering | |
@@ -31,3 +32,4 @@ Results (plots, WAV files) are saved in `outputs/part1 ... part6`.
 ## Notes
 
 - Part 4 reads `outputs/part3/noisy.wav`, so run Part 3 first.
+- Parts 1 and 2 generate their own signals and need no input files.
