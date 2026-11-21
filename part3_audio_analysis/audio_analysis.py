@@ -1,21 +1,4 @@
-"""Part 3 - Audio Analysis
-
-Tasks (from the project brief):
-  1. Load the speech recording and show it in the time domain.
-  2. Compute and plot its frequency spectrum (FFT).
-  3. Compute and plot its spectrogram (frequency content over time).
-  4. Add a 50 Hz sinusoidal interference (mains hum) and save it as
-     noisy.wav, so Part 4 can remove it with a notch filter.
-
-Extras: clean vs noisy comparison (time + spectrum), and the effect of the
-spectrogram window length on what we can see.
-
-Key relations:
-  Frequency axis of the FFT   f[k] = k * fs / N          (k = 0 ... N/2)
-  Frequency resolution        df = fs / N   (spectrum),   df ~ 1 / window length (spectrogram)
-  Interference                x_noisy[n] = x[n] + A * sin(2*pi*F_NOISE*n/fs)
-  Amplitude from target SNR   A = sqrt(2) * rms(x) / 10^(SNR_dB / 20)
-"""
+# Part 3 - Audio Analysis
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import spectrogram
