@@ -1,15 +1,5 @@
-"""Part 1 - Mathematical Signal & DTFT
+# Part 1 - Mathematical Signal & DTFT
 
-Tasks (from the project brief):
-  1. Generate a signal made of two sinusoids + Gaussian noise.
-  2. Compute the DTFT from its defining equation using loops.
-  3. Plot the magnitude and phase spectra.
-
-Extras: check the result against np.fft, and show how the number of
-samples N changes the spectrum.
-
-DTFT definition:   X(w) = sum over n of  x[n] * exp(-j * w * n)
-"""
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
