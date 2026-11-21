@@ -13,6 +13,6 @@ IMAGE_PATH = DATA_DIR / "image.png"
 SEED = 42
 
 # Audio interference (Part 3 adds it, Part 4 removes it)
-F_NOISE = 50          # Hz (50 for Egypt mains, or 60)
+F_NOISE = 60          # Hz (50 for Egypt mains, or 60)
 NOISY_WAV = OUT_DIR / "part3" / "noisy.wav"
 FILTERED_WAV = OUT_DIR / "part4" / "filtered.wav"
