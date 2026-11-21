@@ -25,7 +25,7 @@ Results (plots, WAV files) are saved in `outputs/part1 ... part6`.
 | 1 | Mathematical Signal & DTFT | Gehad Abdelaziz |
 | 2 | Convolution & Difference Equations | Nour Hatem |
 | 3 | Audio Analysis | Mohamed khaled |
-| 4 | Audio Filtering | Noa Ahmed|
+| 4 | Audio Filtering | Noha Ahmed|
 | 5 | 2D Fourier & Image Filtering | Gehad Abdelaziz |
 | 6 | Image Denoising & Evaluation | Hania Zaher |
 
