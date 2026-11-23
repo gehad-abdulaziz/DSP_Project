@@ -109,7 +109,11 @@ def unit_impulse(length):
 
 
 def difference_equation(x, a):
-    """Solves y[n] = a*y[n-1] + x[n] with y[-1] = 0, using a loop."""
+    """Solves y[n] = a*y[n-1] + x[n] with y[-1] = 0, using a loop.
+
+    The impulse response is h[n] = a**n. The system is BIBO stable only if |a| < 1
+    (pole inside the unit circle); |a| = 1 is marginal and |a| > 1 diverges.
+    """
     y = np.zeros(len(x))
     for n in range(len(x)):
         previous = y[n - 1] if n > 0 else 0.0
