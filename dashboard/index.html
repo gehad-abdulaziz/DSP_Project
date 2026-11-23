@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSP LAB — Interactive Signal Processing Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="app-layout">
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <h1>⚡ DSP LAB</h1>
+        <p>Interactive Signal Processing Studio</p>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-section">
+            <div class="nav-section-title">Main</div>
+            <a class="nav-item active" data-page="dashboard" href="#">
+                <span class="nav-icon">📊</span><span>Dashboard</span>
+            </a>
+        </div>
+        <div class="nav-section">
+            <div class="nav-section-title">DSP Modules</div>
+            <a class="nav-item" data-page="part1" href="#">
+                <span class="nav-icon">〰️</span><span>Part 1 — DTFT</span><span class="nav-badge">1</span>
+            </a>
+            <a class="nav-item" data-page="part2" href="#">
+                <span class="nav-icon">∗</span><span>Part 2 — Convolution</span><span class="nav-badge">2</span>
+            </a>
+            <a class="nav-item" data-page="part3" href="#">
+                <span class="nav-icon">🔊</span><span>Part 3 — Audio Analysis</span><span class="nav-badge">3</span>
+            </a>
+            <a class="nav-item" data-page="part4" href="#">
+                <span class="nav-icon">🎛️</span><span>Part 4 — Audio Filtering</span><span class="nav-badge">4</span>
+            </a>
+            <a class="nav-item" data-page="part5" href="#">
+                <span class="nav-icon">🖼️</span><span>Part 5 — Image Fourier</span><span class="nav-badge">5</span>
+            </a>
+            <a class="nav-item" data-page="part6" href="#">
+                <span class="nav-icon">🔬</span><span>Part 6 — Image Denoising</span><span class="nav-badge">6</span>
+            </a>
+        </div>
+        <div class="nav-section">
+            <div class="nav-section-title">System</div>
+            <a class="nav-item" data-page="history" href="#">
+                <span class="nav-icon">📋</span><span>Experiment History</span>
+            </a>
+            <a class="nav-item" data-page="about" href="#">
+                <span class="nav-icon">ℹ️</span><span>Project Information</span>
+            </a>
+        </div>
+    </nav>
+</aside>
+
+<!-- ═══════════════════ MAIN CONTENT ═══════════════════ -->
+<main class="main-content">
+
+<!-- ════════ DASHBOARD ════════ -->
+<section id="page-dashboard" class="page-section active">
+    <div class="page-header">
+        <h2>DSP LAB — Interactive Signal Processing Studio</h2>
+        <p>Execute, visualize, and experiment with the entire Digital Signal Processing pipeline.</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon blue">📦</div>
+            <div class="stat-info"><h3 id="stat-total">6</h3><p>Total Parts</p></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green">✓</div>
+            <div class="stat-info"><h3 id="stat-completed">0</h3><p>Completed</p></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red">✗</div>
+            <div class="stat-info"><h3 id="stat-failed">0</h3><p>Failed</p></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon cyan">⏱</div>
+            <div class="stat-info"><h3 id="stat-time">—</h3><p>Last Run Time</p></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon violet">📁</div>
+            <div class="stat-info"><h3 id="stat-data">—</h3><p>Input Data</p></div>
+        </div>
+    </div>
+
+    <div style="text-align:center;margin:32px 0;">
+        <button class="btn btn-run-all btn-lg" id="btn-run-all" onclick="DSPLab.runAll()">
+            🚀 RUN ALL EXPERIMENTS
+        </button>
+        <p style="color:var(--text-muted);font-size:12px;margin-top:8px;">
+            Runs all 6 DSP parts sequentially with current parameter values
+        </p>
+    </div>
+
+    <div id="run-all-progress" class="card" style="display:none;">
+        <div class="card-header">
+            <span class="card-title">Execution Progress</span>
+            <span id="progress-text" style="color:var(--text-muted);font-size:12px;">Preparing...</span>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Processing Pipeline</span>
+        </div>
+        <div class="pipeline">
+            <div class="pipeline-stage" id="pipeline-stage-1">
+                <div class="stage-num">1</div>
+                <div class="stage-info">
+                    <div class="stage-name">DTFT (Discrete-Time Fourier Transform)</div>
+                    <div class="stage-desc">Generate signal, compute DTFT, find frequency peaks, compare with FFT</div>
+                </div>
+                <span class="status-badge pending"><span class="status-dot"></span> pending</span>
+            </div>
+            <div class="pipeline-stage" id="pipeline-stage-2">
+                <div class="stage-num">2</div>
+                <div class="stage-info">
+                    <div class="stage-name">Convolution & Difference Equations</div>
+                    <div class="stage-desc">Moving average, time-vs-frequency convolution, difference equation</div>
+                </div>
+                <span class="status-badge pending"><span class="status-dot"></span> pending</span>
+            </div>
+            <div class="pipeline-stage" id="pipeline-stage-3">
+                <div class="stage-num">3</div>
+                <div class="stage-info">
+                    <div class="stage-name">Audio Signal Analysis</div>
+                    <div class="stage-desc">Load speech, compute spectrum, spectrogram, add interference</div>
+                </div>
+                <span class="status-badge pending"><span class="status-dot"></span> pending</span>
+            </div>
+            <div class="pipeline-stage" id="pipeline-stage-4">
+                <div class="stage-num">4</div>
+                <div class="stage-info">
+                    <div class="stage-name">Audio Filtering (Notch Filter)</div>
+                    <div class="stage-desc">Load noisy audio, design IIR notch filter, apply and evaluate</div>
+                </div>
+                <span class="status-badge pending"><span class="status-dot"></span> pending</span>
+            </div>
+            <div class="pipeline-stage" id="pipeline-stage-5">
+                <div class="stage-num">5</div>
+                <div class="stage-info">
+                    <div class="stage-name">2D Fourier Transform & Image Filtering</div>
+                    <div class="stage-desc">Load image, compute 2D spectrum, apply LP/HP/Gaussian masks</div>
+                </div>
+                <span class="status-badge pending"><span class="status-dot"></span> pending</span>
+            </div>
+            <div class="pipeline-stage" id="pipeline-stage-6">
+                <div class="stage-num">6</div>
+                <div class="stage-info">
+                    <div class="stage-name">Image Denoising & Evaluation</div>
+                    <div class="stage-desc">Add periodic noise, build notch mask, restore image, compute MSE/PSNR</div>
+                </div>
+                <span class="status-badge pending"><span class="status-dot"></span> pending</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════ PART 1 — DTFT ════════ -->
+<section id="page-part1" class="page-section">
+    <div class="part-header">
+        <div class="part-header-info">
+            <h2>Part 1 — DTFT (Discrete-Time Fourier Transform)</h2>
+            <p class="part-desc">Generates a composite sinusoidal signal with Gaussian noise, computes the DTFT using manual loops, identifies frequency peaks, and verifies the result against NumPy's FFT.</p>
+        </div>
+        <div class="part-actions">
+            <span id="part1-status"></span>
+            <button class="btn btn-primary" id="btn-run-part-1" onclick="DSPLab.runPart(1)">▶ Run Part 1</button>
+        </div>
+    </div>
+    <div class="tabs">
+        <div class="tab active" data-part="1" data-tab="overview" onclick="DSPLab.switchTab(1,'overview')">Overview</div>
+        <div class="tab" data-part="1" data-tab="params" onclick="DSPLab.switchTab(1,'params')">Parameters</div>
+        <div class="tab" data-part="1" data-tab="results" onclick="DSPLab.switchTab(1,'results')">Results</div>
+        <div class="tab" data-part="1" data-tab="console" onclick="DSPLab.switchTab(1,'console')">Console</div>
+    </div>
+    <div class="tab-content active" data-part="1" data-tab="overview">
+        <div class="overview-box"><h4>🎯 Objective</h4><p>Compute the Discrete-Time Fourier Transform of a noisy signal from the mathematical definition (using nested loops) and demonstrate that the FFT is a sampled version of the DTFT.</p></div>
+        <div class="overview-box"><h4>📐 Algorithms</h4><ul>
+            <li><strong>Signal generation</strong>: x[n] = A₁sin(2πF₁n/Fs) + A₂sin(2πF₂n/Fs) + noise</li>
+            <li><strong>Manual DTFT</strong>: X(ω) = Σ x[n]·e^(-jωn) evaluated at a frequency grid</li>
+            <li><strong>Peak detection</strong>: scipy.signal.find_peaks on the positive-frequency magnitude</li>
+            <li><strong>FFT verification</strong>: compare manual DTFT at ω=2πk/N against np.fft.fft</li>
+        </ul></div>
+        <div class="overview-box"><h4>📂 Inputs / Outputs</h4><p><strong>Input:</strong> Mathematically generated composite signal.<br><strong>Outputs:</strong> Time-domain plot, magnitude/phase spectrum, effect-of-N comparison, peak frequencies, FFT vs DTFT error.</p></div>
+    </div>
+    <div class="tab-content" data-part="1" data-tab="params"><div id="part1-params"></div></div>
+    <div class="tab-content" data-part="1" data-tab="results">
+        <div id="part1-metrics" class="card" style="margin-bottom:16px;"></div>
+        <div id="part1-gallery"></div>
+    </div>
+    <div class="tab-content" data-part="1" data-tab="console"><div id="part1-console" class="console">No output yet. Run Part 1 to see the execution log.</div></div>
+</section>
+
+<!-- ════════ PART 2 — Convolution ════════ -->
+<section id="page-part2" class="page-section">
+    <div class="part-header">
+        <div class="part-header-info">
+            <h2>Part 2 — Convolution & Difference Equations</h2>
+            <p class="part-desc">Applies moving average filters, compares time-domain and frequency-domain convolution (with and without zero-padding), and demonstrates stable vs. unstable first-order difference equations.</p>
+        </div>
+        <div class="part-actions">
+            <span id="part2-status"></span>
+            <button class="btn btn-primary" id="btn-run-part-2" onclick="DSPLab.runPart(2)">▶ Run Part 2</button>
+        </div>
+    </div>
+    <div class="tabs">
+        <div class="tab active" data-part="2" data-tab="overview" onclick="DSPLab.switchTab(2,'overview')">Overview</div>
+        <div class="tab" data-part="2" data-tab="params" onclick="DSPLab.switchTab(2,'params')">Parameters</div>
+        <div class="tab" data-part="2" data-tab="results" onclick="DSPLab.switchTab(2,'results')">Results</div>
+        <div class="tab" data-part="2" data-tab="console" onclick="DSPLab.switchTab(2,'console')">Console</div>
+    </div>
+    <div class="tab-content active" data-part="2" data-tab="overview">
+        <div class="overview-box"><h4>🎯 Objective</h4><p>Demonstrate linear convolution via np.convolve, the convolution theorem (DFT multiplication with zero-padding gives the same linear convolution), and the impulse response of a first-order IIR system.</p></div>
+        <div class="overview-box"><h4>📐 Algorithms</h4><ul>
+            <li><strong>Moving average</strong>: h[n] = 1/M for n = 0..M-1 (FIR filter)</li>
+            <li><strong>Frequency-domain convolution</strong>: y = IFFT(FFT(x,L)·FFT(h,L)), L≥N+M-1</li>
+            <li><strong>Circular convolution error</strong>: without zero-padding, wrap-around corrupts M-1 samples</li>
+            <li><strong>Difference equation</strong>: y[n] = a·y[n-1] + x[n]; impulse response = aⁿ</li>
+        </ul></div>
+        <div class="overview-box"><h4>📂 Inputs / Outputs</h4><p><strong>Input:</strong> Noisy sinusoid (mathematical).<br><strong>Outputs:</strong> Moving average plots, domain comparison, frequency responses, stable/unstable difference equations.</p></div>
+    </div>
+    <div class="tab-content" data-part="2" data-tab="params"><div id="part2-params"></div></div>
+    <div class="tab-content" data-part="2" data-tab="results">
+        <div id="part2-metrics" class="card" style="margin-bottom:16px;"></div>
+        <div id="part2-gallery"></div>
+    </div>
+    <div class="tab-content" data-part="2" data-tab="console"><div id="part2-console" class="console">No output yet. Run Part 2 to see the execution log.</div></div>
+</section>
+
+<!-- ════════ PART 3 — Audio Analysis ════════ -->
+<section id="page-part3" class="page-section">
+    <div class="part-header">
+        <div class="part-header-info">
+            <h2>Part 3 — Audio Signal Analysis</h2>
+            <p class="part-desc">Loads a real speech recording, analyzes its time-domain and frequency-domain characteristics (RMS, dominant frequency, energy bandwidth, spectrogram), and adds mains-hum interference.</p>
+        </div>
+        <div class="part-actions">
+            <span id="part3-status"></span>
+            <button class="btn btn-primary" id="btn-run-part-3" onclick="DSPLab.runPart(3)">▶ Run Part 3</button>
+        </div>
+    </div>
+    <div class="tabs">
+        <div class="tab active" data-part="3" data-tab="overview" onclick="DSPLab.switchTab(3,'overview')">Overview</div>
+        <div class="tab" data-part="3" data-tab="params" onclick="DSPLab.switchTab(3,'params')">Parameters</div>
+        <div class="tab" data-part="3" data-tab="results" onclick="DSPLab.switchTab(3,'results')">Results</div>
+        <div class="tab" data-part="3" data-tab="console" onclick="DSPLab.switchTab(3,'console')">Console</div>
+    </div>
+    <div class="tab-content active" data-part="3" data-tab="overview">
+        <div class="overview-box"><h4>🎯 Objective</h4><p>Analyze a real speech signal in both time and frequency domains, measure its spectral characteristics, and create a noisy version by injecting a known sinusoidal interference for Part 4 to remove.</p></div>
+        <div class="overview-box"><h4>📐 Algorithms</h4><ul>
+            <li><strong>Hann-windowed FFT</strong>: reduces spectral leakage for magnitude spectrum</li>
+            <li><strong>Spectrogram (STFT)</strong>: short-time Fourier transform with Hann windows</li>
+            <li><strong>Energy bandwidth</strong>: frequency below which 95% of the energy lies</li>
+            <li><strong>Interference injection</strong>: A·sin(2πf₀t) where A is set by the target SNR</li>
+        </ul></div>
+        <div class="overview-box"><h4>📂 Inputs / Outputs</h4><p><strong>Input:</strong> data/speech.wav<br><strong>Outputs:</strong> Waveform plot, spectrum, spectrogram, clean vs noisy comparison, noisy.wav file.</p></div>
+    </div>
+    <div class="tab-content" data-part="3" data-tab="params"><div id="part3-params"></div></div>
+    <div class="tab-content" data-part="3" data-tab="results">
+        <div id="part3-metrics" class="card" style="margin-bottom:16px;"></div>
+        <div id="part3-gallery"></div>
+    </div>
+    <div class="tab-content" data-part="3" data-tab="console"><div id="part3-console" class="console">No output yet. Run Part 3 to see the execution log.</div></div>
+</section>
+
+<!-- ════════ PART 4 — Audio Filtering ════════ -->
+<section id="page-part4" class="page-section">
+    <div class="part-header">
+        <div class="part-header-info">
+            <h2>Part 4 — Audio Filtering (IIR Notch Filter)</h2>
+            <p class="part-desc">Designs a second-order IIR notch filter to remove the mains-hum interference added by Part 3, then measures the attenuation and visualizes the pole-zero diagram.</p>
+        </div>
+        <div class="part-actions">
+            <span id="part4-status"></span>
+            <button class="btn btn-primary" id="btn-run-part-4" onclick="DSPLab.runPart(4)">▶ Run Part 4</button>
+        </div>
+    </div>
+    <div class="tabs">
+        <div class="tab active" data-part="4" data-tab="overview" onclick="DSPLab.switchTab(4,'overview')">Overview</div>
+        <div class="tab" data-part="4" data-tab="params" onclick="DSPLab.switchTab(4,'params')">Parameters</div>
+        <div class="tab" data-part="4" data-tab="results" onclick="DSPLab.switchTab(4,'results')">Results</div>
+        <div class="tab" data-part="4" data-tab="console" onclick="DSPLab.switchTab(4,'console')">Console</div>
+    </div>
+    <div class="tab-content active" data-part="4" data-tab="overview">
+        <div class="overview-box"><h4>🎯 Objective</h4><p>Remove a known sinusoidal interference from a speech signal using a second-order IIR notch filter. Verify stability via pole locations and measure the narrow-band attenuation.</p></div>
+        <div class="overview-box"><h4>📐 Algorithms</h4><ul>
+            <li><strong>Notch filter</strong>: H(z) = K·(1−2cos(ω₀)z⁻¹+z⁻²) / (1−2r·cos(ω₀)z⁻¹+r²z⁻²)</li>
+            <li><strong>Pole-zero diagram</strong>: zeros on the unit circle, poles just inside (radius r)</li>
+            <li><strong>Stability check</strong>: all pole magnitudes < 1</li>
+            <li><strong>Band-RMS measurement</strong>: FFT magnitude in a narrow band around the notch frequency</li>
+        </ul></div>
+        <div class="overview-box"><h4>📂 Inputs / Outputs</h4><p><strong>Input:</strong> outputs/part3/noisy.wav (run Part 3 first).<br><strong>Outputs:</strong> Waveform comparison, spectrum comparison, filter response, pole-zero plot, filtered.wav.</p></div>
+    </div>
+    <div class="tab-content" data-part="4" data-tab="params"><div id="part4-params"></div></div>
+    <div class="tab-content" data-part="4" data-tab="results">
+        <div id="part4-metrics" class="card" style="margin-bottom:16px;"></div>
+        <div id="part4-gallery"></div>
+    </div>
+    <div class="tab-content" data-part="4" data-tab="console"><div id="part4-console" class="console">No output yet. Run Part 4 to see the execution log.</div></div>
+</section>
+
+<!-- ════════ PART 5 — Image Fourier ════════ -->
+<section id="page-part5" class="page-section">
+    <div class="part-header">
+        <div class="part-header-info">
+            <h2>Part 5 — 2D Fourier Transform & Image Filtering</h2>
+            <p class="part-desc">Computes the 2D DFT of a grayscale image and applies ideal circular low-pass, high-pass, and Gaussian low-pass masks in the frequency domain.</p>
+        </div>
+        <div class="part-actions">
+            <span id="part5-status"></span>
+            <button class="btn btn-primary" id="btn-run-part-5" onclick="DSPLab.runPart(5)">▶ Run Part 5</button>
+        </div>
+    </div>
+    <div class="tabs">
+        <div class="tab active" data-part="5" data-tab="overview" onclick="DSPLab.switchTab(5,'overview')">Overview</div>
+        <div class="tab" data-part="5" data-tab="params" onclick="DSPLab.switchTab(5,'params')">Parameters</div>
+        <div class="tab" data-part="5" data-tab="results" onclick="DSPLab.switchTab(5,'results')">Results</div>
+        <div class="tab" data-part="5" data-tab="console" onclick="DSPLab.switchTab(5,'console')">Console</div>
+    </div>
+    <div class="tab-content active" data-part="5" data-tab="overview">
+        <div class="overview-box"><h4>🎯 Objective</h4><p>Demonstrate 2D frequency-domain image filtering: how ideal circular masks keep or remove spatial frequencies, and the ringing (Gibbs phenomenon) caused by the sharp cutoff of the ideal filter vs. the smooth Gaussian.</p></div>
+        <div class="overview-box"><h4>📐 Algorithms</h4><ul>
+            <li><strong>2D DFT</strong>: fft2 + fftshift to center the spectrum</li>
+            <li><strong>Ideal LP/HP masks</strong>: binary circle of given radius in frequency space</li>
+            <li><strong>Gaussian LP</strong>: exp(−d²/(2σ²)) — smooth rolloff avoids ringing</li>
+            <li><strong>Inverse filtering</strong>: multiply spectrum × mask → ifftshift → ifft2</li>
+        </ul></div>
+        <div class="overview-box"><h4>📂 Inputs / Outputs</h4><p><strong>Input:</strong> data/image.png<br><strong>Outputs:</strong> Original + spectrum, LP/HP results, effect of radius, ideal vs Gaussian comparison.</p></div>
+    </div>
+    <div class="tab-content" data-part="5" data-tab="params"><div id="part5-params"></div></div>
+    <div class="tab-content" data-part="5" data-tab="results">
+        <div id="part5-metrics" class="card" style="margin-bottom:16px;"></div>
+        <div id="part5-gallery"></div>
+    </div>
+    <div class="tab-content" data-part="5" data-tab="console"><div id="part5-console" class="console">No output yet. Run Part 5 to see the execution log.</div></div>
+</section>
+
+<!-- ════════ PART 6 — Image Denoising ════════ -->
+<section id="page-part6" class="page-section">
+    <div class="part-header">
+        <div class="part-header-info">
+            <h2>Part 6 — Image Denoising & Evaluation</h2>
+            <p class="part-desc">Adds periodic sinusoidal noise to an image, identifies the noise peaks in the 2D spectrum, applies a notch mask to remove them, and evaluates restoration quality with MSE and PSNR.</p>
+        </div>
+        <div class="part-actions">
+            <span id="part6-status"></span>
+            <button class="btn btn-primary" id="btn-run-part-6" onclick="DSPLab.runPart(6)">▶ Run Part 6</button>
+        </div>
+    </div>
+    <div class="tabs">
+        <div class="tab active" data-part="6" data-tab="overview" onclick="DSPLab.switchTab(6,'overview')">Overview</div>
+        <div class="tab" data-part="6" data-tab="params" onclick="DSPLab.switchTab(6,'params')">Parameters</div>
+        <div class="tab" data-part="6" data-tab="results" onclick="DSPLab.switchTab(6,'results')">Results</div>
+        <div class="tab" data-part="6" data-tab="console" onclick="DSPLab.switchTab(6,'console')">Console</div>
+    </div>
+    <div class="tab-content active" data-part="6" data-tab="overview">
+        <div class="overview-box"><h4>🎯 Objective</h4><p>Demonstrate frequency-domain image denoising: add known periodic noise, locate the noise peaks in the 2D spectrum, zero them out with a notch mask, and quantify the restoration quality.</p></div>
+        <div class="overview-box"><h4>📐 Algorithms</h4><ul>
+            <li><strong>Periodic noise</strong>: A·sin(2π(u₀x/W + v₀y/H)) creates exactly 2 bright points in the spectrum</li>
+            <li><strong>Notch mask</strong>: set a small circular region around each noise peak to zero</li>
+            <li><strong>MSE</strong>: mean((original − restored)²)</li>
+            <li><strong>PSNR</strong>: 10·log₁₀(255² / MSE) — higher is better</li>
+        </ul></div>
+        <div class="overview-box"><h4>📂 Inputs / Outputs</h4><p><strong>Input:</strong> data/image.png<br><strong>Outputs:</strong> Noisy image + spectrum, notch mask, restored image, zoom comparison, MSE/PSNR metrics, radius study.</p></div>
+    </div>
+    <div class="tab-content" data-part="6" data-tab="params"><div id="part6-params"></div></div>
+    <div class="tab-content" data-part="6" data-tab="results">
+        <div id="part6-metrics" class="card" style="margin-bottom:16px;"></div>
+        <div id="part6-gallery"></div>
+    </div>
+    <div class="tab-content" data-part="6" data-tab="console"><div id="part6-console" class="console">No output yet. Run Part 6 to see the execution log.</div></div>
+</section>
+
+<!-- ════════ EXPERIMENT HISTORY ════════ -->
+<section id="page-history" class="page-section">
+    <div class="page-header">
+        <h2>Experiment History</h2>
+        <p>Track and compare your experiments across different parameter configurations.</p>
+    </div>
+    <div style="margin-bottom:20px;display:flex;gap:10px;">
+        <button class="btn btn-primary" onclick="DSPLab.saveExperiment(prompt('Experiment label:'))">
+            💾 Save Current Parameters as Experiment
+        </button>
+    </div>
+    <div id="experiment-list"></div>
+</section>
+
+<!-- ════════ ABOUT ════════ -->
+<section id="page-about" class="page-section">
+    <div class="page-header">
+        <h2>Project Information</h2>
+    </div>
+    <div class="card">
+        <h3 style="margin-bottom:16px;">Multi-Domain Digital Signal Processing — Project</h3>
+        <div class="overview-box">
+            <h4>📖 Description</h4>
+            <p>A comprehensive DSP project covering six key areas: DTFT computation, convolution and difference equations, audio analysis and filtering, and 2D image Fourier transform with denoising. Each part demonstrates fundamental concepts with real data and interactive parameter control.</p>
+        </div>
+        <div class="overview-box">
+            <h4>🛠️ Technology Stack</h4>
+            <ul>
+                <li><strong>Python</strong> — Core DSP implementations</li>
+                <li><strong>NumPy / SciPy</strong> — Numerical computing and signal processing</li>
+                <li><strong>Matplotlib</strong> — Scientific visualization</li>
+                <li><strong>OpenCV</strong> — Image loading and grayscale conversion</li>
+                <li><strong>Flask</strong> — Web application backend</li>
+                <li><strong>Vanilla JS/CSS</strong> — Premium dark-themed frontend</li>
+            </ul>
+        </div>
+        <div class="overview-box">
+            <h4>🚀 Getting Started</h4>
+            <ol style="padding-left:20px;color:var(--text-secondary);">
+                <li>Install dependencies: <code>pip install -r requirements.txt flask</code></li>
+                <li>Place <code>speech.wav</code> and <code>image.png</code> in the <code>data/</code> directory</li>
+                <li>Launch the app: <code>python app.py</code></li>
+                <li>Open <code>http://localhost:5000</code> in your browser</li>
+                <li>Click "RUN ALL EXPERIMENTS" or run individual parts</li>
+            </ol>
+        </div>
+        <div class="overview-box">
+            <h4>🔧 CLI Usage</h4>
+            <p>The original command-line pipeline still works:</p>
+            <pre style="background:var(--bg-input);padding:12px;border-radius:6px;margin-top:8px;color:var(--accent-cyan);font-family:'JetBrains Mono',monospace;font-size:12px;">python main.py          # Run all 6 parts
+python main.py 3 4      # Run only parts 3 and 4</pre>
+        </div>
+    </div>
+</section>
+
+</main>
+</div>
+
+<!-- Image Modal -->
+<div class="modal-overlay" id="image-modal">
+    <img id="modal-image" src="" alt="Full-size preview">
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
