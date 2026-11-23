@@ -99,6 +99,13 @@ def frequency_response(h):
 # ------------------------------------------------------------------
 # Step 3: first-order difference equation
 # ------------------------------------------------------------------
+def unit_impulse(length):
+    """Unit impulse delta[n]: 1 at n = 0 and 0 elsewhere."""
+    impulse = np.zeros(length)
+    impulse[0] = 1.0
+    return impulse
+
+
 def difference_equation(x, a):
     """Solves y[n] = a*y[n-1] + x[n] with y[-1] = 0, using a loop."""
     y = np.zeros(len(x))
@@ -186,8 +193,7 @@ def plot_frequency_responses(path):
 
 def plot_difference_equation(path):
     """Impulse response of y[n] = a*y[n-1] + x[n] for a stable and an unstable a."""
-    impulse = np.zeros(NUM_Y)
-    impulse[0] = 1.0
+    impulse = unit_impulse(NUM_Y)
     n = np.arange(NUM_Y)
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
@@ -237,8 +243,7 @@ def run():
     plot_frequency_responses(out / "03_frequency_response.png")
 
     # 4) difference equation, verified against scipy.signal.lfilter
-    impulse = np.zeros(NUM_Y)
-    impulse[0] = 1.0
+    impulse = unit_impulse(NUM_Y)
     for a in (A_STABLE, A_UNSTABLE):
         y_loop = difference_equation(impulse, a)
         y_scipy = lfilter([1.0], [1.0, -a], impulse)
