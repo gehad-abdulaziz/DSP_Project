@@ -58,8 +58,6 @@ def moving_average_kernel(M):
     """Impulse response of an M-point moving average: M equal weights summing to 1."""
     if M < 1:
         raise ValueError("Window length M must be a positive integer")
-    if M < 1:
-        raise ValueError("Window length M must be a positive integer")
     return np.ones(M) / M
 
 
