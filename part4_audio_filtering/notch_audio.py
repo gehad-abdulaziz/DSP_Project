@@ -1,12 +1,3 @@
-"""
-Part 4 - Audio Filtering (Second-Order IIR Notch Filter)
-
-Input : config.NOISY_WAV (created by Part 3)
-Output: outputs/part4/filtered.wav and comparison figures
-
-Run Part 3 before Part 4:
-    python main.py 3 4
-"""
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,24 +9,15 @@ from common.io_utils import out_dir
 from common.plot_utils import save_fig
 
 
-# ------------------------------------------------------------------
-# Settings
-# ------------------------------------------------------------------
-NOTCH_FREQUENCY_HZ = config.F_NOISE  # Part 3 adds the interference at this frequency
-POLE_RADIUS = 0.999                  # closer to 1 -> narrower notch
-ZOOM_BANDWIDTH_HZ = 30               # spectrum zoom around the interference
-TIME_ZOOM_SECONDS = 0.10             # first 100 ms in waveform comparison
-NUM_RESPONSE_POINTS = 8192
+NOTCH_FREQUENCY_HZ = config.F_NOISE
+POLE_RADIUS = 0.999                 
+ZOOM_BANDWIDTH_HZ = 30              
+TIME_ZOOM_SECONDS = 0.10           
 
 
-# ------------------------------------------------------------------
-# Step 1: WAV loading and saving
-# ------------------------------------------------------------------
+#WAV loading
 def read_wav_mono_or_stereo(path):
-    """
-    Read a WAV file and convert its samples to float64 in approximately [-1, 1].
-    Mono stays 1-D; stereo/multichannel stays 2-D (samples, channels).
-    """
+
     fs, data = wavfile.read(path)
 
     if np.issubdtype(data.dtype, np.integer):
@@ -52,23 +34,14 @@ def read_wav_mono_or_stereo(path):
 
 
 def write_float_wav(path, fs, audio):
-    """Save processed audio as a standard 32-bit floating-point WAV file."""
     audio = np.asarray(audio, dtype=np.float64)
-    # Avoid values outside the normal audio range.
     audio = np.clip(audio, -1.0, 1.0)
     wavfile.write(str(path), fs, audio.astype(np.float32))
 
 
-# ------------------------------------------------------------------
-# Step 2: calculate the second-order notch coefficients
-# ------------------------------------------------------------------
-
+#calculate the second-order notch coefficients
 def calculate_notch_coefficients(fs, f0, radius=POLE_RADIUS):
-    """
-    Second-order IIR notch filter.
-    H(z) = K (1 - 2cos(w0) z^-1 + z^-2) / (1 - 2r cos(w0) z^-1 + r^2 z^-2)
-    K is chosen so the passband gain at Nyquist (z = -1) equals 1 (0 dB).
-    """
+    
     if not 0 < f0 < fs / 2:
         raise ValueError("Invalid notch frequency.")
 
@@ -86,7 +59,6 @@ def calculate_notch_coefficients(fs, f0, radius=POLE_RADIUS):
     a1 = -2.0 * radius * c
     a2 = radius ** 2
 
-    # Normalize gain at Nyquist (z = -1)
     gain = (a0 - a1 + a2) / (b0 - b1 + b2)
 
     b = gain * np.array([b0, b1, b2], dtype=np.float64)
@@ -96,11 +68,8 @@ def calculate_notch_coefficients(fs, f0, radius=POLE_RADIUS):
 
 
 
-# ------------------------------------------------------------------
-# Step 3: apply the filter
-# ------------------------------------------------------------------
+#apply the same IIR notch filter to every channel
 def apply_notch_filter(audio, b, a):
-    """Apply the same IIR notch filter to every channel."""
     if audio.ndim == 1:
         return lfilter(b, a, audio)
 
@@ -110,20 +79,26 @@ def apply_notch_filter(audio, b, a):
     return filtered
 
 
-def remove_edge_clicks(audio, fs, fade_ms=30):
-    audio = audio.copy()
+def remove_edge_clicks(audio, fs, fade_ms=200):
+    audio = audio.copy().astype(np.float64)
 
     fade_samples = int(fs * fade_ms / 1000)
 
     if fade_samples <= 1 or len(audio) < 2 * fade_samples:
         return audio
 
-    fade_in = np.linspace(0, 1, fade_samples)
-    fade_out = np.linspace(1, 0, fade_samples)
+    fade_in = 0.5 - 0.5 * np.cos(
+        np.linspace(0, np.pi, fade_samples)
+    )
+
+    fade_out = 0.5 + 0.5 * np.cos(
+        np.linspace(0, np.pi, fade_samples)
+    )
 
     if audio.ndim == 1:
         audio[:fade_samples] *= fade_in
         audio[-fade_samples:] *= fade_out
+
     else:
         audio[:fade_samples] *= fade_in[:, None]
         audio[-fade_samples:] *= fade_out[:, None]
@@ -131,22 +106,19 @@ def remove_edge_clicks(audio, fs, fade_ms=30):
     return audio
 
 
-# ------------------------------------------------------------------
-# Step 4: analysis helpers
-# ------------------------------------------------------------------
+#convert to mono analysis signal
 def mono_for_analysis(audio):
-    """Create a mono analysis signal without changing the saved channel layout."""
     if audio.ndim == 1:
         return audio
     return np.mean(audio, axis=1)
 
-
+#convert sample to second
 def time_axis(audio, fs):
     return np.arange(len(audio)) / fs
 
-
+#convert time domain to frequency domain
 def magnitude_spectrum(audio, fs):
-    """One-sided Hann-windowed magnitude spectrum."""
+    """One-sided (positive only) Hann-windowed magnitude spectrum."""
     x = mono_for_analysis(audio)
     window = np.hanning(len(x))
     spectrum = np.fft.rfft(x * window)
@@ -154,32 +126,25 @@ def magnitude_spectrum(audio, fs):
     magnitude = np.abs(spectrum)
     return frequencies, magnitude
 
-
+# measure band rms 
 def band_rms_near_frequency(audio, fs, f0, half_width=2.0):
-    """
-    RMS of FFT magnitudes in a narrow band around f0.
-    This is a useful indicator of the interference reduction, although speech
-    may also contain natural energy in the same band.
-    """
-    x = mono_for_analysis(audio)
-    window = np.hanning(len(x))
-    spectrum = np.fft.rfft(x * window)
-    frequencies = np.fft.rfftfreq(len(x), d=1.0 / fs)
+
+    frequencies, magnitude = magnitude_spectrum(audio, fs)
+
     band = (frequencies >= f0 - half_width) & (frequencies <= f0 + half_width)
 
     if not np.any(band):
         return 0.0
-    return float(np.sqrt(np.mean(np.abs(spectrum[band]) ** 2)))
+    return float(np.sqrt(np.mean(magnitude[band] ** 2)))
 
-
+# measure noise db before and after filter 
 def attenuation_db(before_level, after_level):
     eps = 1e-12
     return 20.0 * np.log10((before_level + eps) / (after_level + eps))
 
 
-# ------------------------------------------------------------------
 # Step 5: plots
-# ------------------------------------------------------------------
+#plot time
 def plot_waveform_comparison(noisy, filtered, fs, path):
     x_noisy = mono_for_analysis(noisy)
     x_filtered = mono_for_analysis(filtered)
@@ -202,7 +167,7 @@ def plot_waveform_comparison(noisy, filtered, fs, path):
     fig.tight_layout()
     save_fig(fig, path)
 
-
+# plot frequency
 def plot_spectrum_comparison(noisy, filtered, fs, f0, path):
     f_before, mag_before = magnitude_spectrum(noisy, fs)
     f_after, mag_after = magnitude_spectrum(filtered, fs)
@@ -239,9 +204,8 @@ def plot_spectrum_comparison(noisy, filtered, fs, f0, path):
     save_fig(fig, path)
 
 
-
+#plot filter
 def plot_filter_response(b, a, fs, f0, path):
-    # Use a fine frequency grid to capture the exact 50 Hz notch
     frequencies = np.linspace(0, min(2000, fs / 2), 20001)
 
     w, response = freqz(
@@ -276,7 +240,6 @@ def plot_filter_response(b, a, fs, f0, path):
     
 # zero   
 def plot_pole_zero(b, a, path):
-    """Pole-zero plot (full unit circle + zoom) with a stability check."""
     zeros = np.roots(b)
     poles = np.roots(a)
     stable = bool(np.all(np.abs(poles) < 1))
@@ -299,7 +262,6 @@ def plot_pole_zero(b, a, path):
     axes[0].set_title("Pole-zero plot (full view)")
     axes[0].legend(loc="upper left")
 
-    # Zoom: zeros and poles are very close to each other, so a zoom shows them separately
     cx, cy = zeros.real.mean(), 0.0
     span = 0.05
     axes[1].set_xlim(cx - span, cx + span)
@@ -316,10 +278,7 @@ def plot_pole_zero(b, a, path):
 
     
 
-
-# ------------------------------------------------------------------
-# Main entry point (called by main.py)
-# ------------------------------------------------------------------
+#main
 def run():
     print("Part 4: Audio Filtering")
 
@@ -331,7 +290,7 @@ def run():
 
     out = out_dir(4)
 
-    # 1) Load the noisy audio created by Part 3
+    #Load the noisy audio
     fs, noisy = read_wav_mono_or_stereo(input_path)
     print(f"  Input file: {input_path}")
     print(f"  Sampling rate: {fs} Hz")
@@ -339,7 +298,7 @@ def run():
     print(f"  Duration: {len(noisy) / fs:.2f} seconds")
     print(f"  Interference frequency: {NOTCH_FREQUENCY_HZ} Hz")
 
-    # 2) Calculate the filter coefficients from the standard structure
+    #calculate the filter coefficients
     w0, b, a, gain = calculate_notch_coefficients(
         fs, NOTCH_FREQUENCY_HZ, POLE_RADIUS
     )
@@ -350,15 +309,15 @@ def run():
     print(f"  b (numerator)   = {b}")
     print(f"  a (denominator) = {a}")
 
-    # 3) Filter the signal and save the result
+    #filter the signal and save
     filtered = apply_notch_filter(noisy, b, a)
-    filtered = remove_edge_clicks(filtered, fs)
+    filtered_new = remove_edge_clicks(filtered, fs)
     output_path = out / "filtered.wav"
-    write_float_wav(output_path, fs, filtered)
+    write_float_wav(output_path, fs, filtered_new)
 
-    # 4) Quantify the reduction near the known interference frequency
+    
     before_level = band_rms_near_frequency(noisy, fs, NOTCH_FREQUENCY_HZ)
-    after_level = band_rms_near_frequency(filtered, fs, NOTCH_FREQUENCY_HZ)
+    after_level = band_rms_near_frequency(filtered_new, fs, NOTCH_FREQUENCY_HZ)
     reduction = attenuation_db(before_level, after_level)
 
     print("\n  Before/after measurements:")
@@ -373,12 +332,12 @@ def run():
     print("  Poles =", np.round(poles, 6))
     print(f"  Pole magnitudes = {np.abs(poles)}  -> stable: {stable}")
     
-    # 5) Save plots
+    #save plots
     plot_waveform_comparison(
-        noisy, filtered, fs, out / "01_waveform_comparison.png"
+        noisy, filtered_new, fs, out / "01_waveform_comparison.png"
     )
     plot_spectrum_comparison(
-        noisy, filtered, fs, NOTCH_FREQUENCY_HZ,
+        noisy, filtered_new, fs, NOTCH_FREQUENCY_HZ,
         out / "02_spectrum_comparison.png"
     )
     plot_filter_response(
