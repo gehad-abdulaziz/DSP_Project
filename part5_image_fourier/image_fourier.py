@@ -18,51 +18,42 @@ import config
 from common.io_utils import out_dir, load_gray_image
 from common.plot_utils import save_fig
 
-# ------------------------------------------------------------------
-# Settings (change these to experiment)
-# ------------------------------------------------------------------
-CUTOFF = 30              # radius of the circular mask, in frequency pixels
-RADII = (10, 30, 60)     # radii compared in the "effect of radius" figure
+
+CUTOFF = 30              
+RADII = (10, 30, 60)  
 
 
 # ------------------------------------------------------------------
 # Helper functions
 # ------------------------------------------------------------------
 def compute_spectrum(img):
-    """2D Fourier transform with the zero frequency moved to the centre."""
     return np.fft.fftshift(np.fft.fft2(img))
 
 
 def log_magnitude(F):
-    """Magnitude on a log scale (the centre is huge, so we need log to see the rest)."""
     return np.log(1 + np.abs(F))
 
 
 def distance_from_center(shape):
-    """For every pixel of the spectrum: its distance from the centre."""
     rows, cols = shape
     y, x = np.ogrid[:rows, :cols]
     return np.sqrt((y - rows // 2) ** 2 + (x - cols // 2) ** 2)
 
 
 def circular_mask(shape, radius):
-    """Ideal low-pass mask: True inside the circle (keep), False outside (remove)."""
     return distance_from_center(shape) <= radius
 
 
 def gaussian_lowpass(shape, sigma):
-    """Smooth low-pass mask (used only for the ringing comparison)."""
     return np.exp(-(distance_from_center(shape) ** 2) / (2 * sigma ** 2))
 
 
 def apply_mask(F, mask):
-    """Multiply the spectrum by the mask, then go back to the image."""
     filtered_spectrum = F * mask
     return np.real(np.fft.ifft2(np.fft.ifftshift(filtered_spectrum)))
 
 
 def show_image(ax, img, title, fixed_range=True):
-    """fixed_range=True shows gray levels 0..255; False lets matplotlib stretch them."""
     if fixed_range:
         ax.imshow(img, cmap="gray", vmin=0, vmax=255)
     else:
@@ -71,9 +62,6 @@ def show_image(ax, img, title, fixed_range=True):
     ax.axis("off")
 
 
-# ------------------------------------------------------------------
-# Figures
-# ------------------------------------------------------------------
 def plot_spectrum(img, F, path):
     fig, (ax_img, ax_spec) = plt.subplots(1, 2, figsize=(12, 6))
     show_image(ax_img, img, "Grayscale image")
@@ -82,10 +70,9 @@ def plot_spectrum(img, F, path):
 
 
 def plot_lowpass_highpass(F, lp_mask, hp_mask, lp_img, hp_img, path):
-    """Row 1: low-pass.  Row 2: high-pass.  Columns: mask, spectrum after mask, result."""
     fig, axes = plt.subplots(2, 3, figsize=(12, 8))
     rows = [("Low-pass", lp_mask, lp_img, True),
-            ("High-pass", hp_mask, hp_img, False)]   # high-pass result has negative values
+            ("High-pass", hp_mask, hp_img, False)]  
     for ax_row, (name, mask, result, fixed) in zip(axes, rows):
         show_image(ax_row[0], mask, f"{name} mask (white = keep)", fixed_range=False)
         show_image(ax_row[1], log_magnitude(F * mask), f"Spectrum after {name}", fixed_range=False)
@@ -94,7 +81,6 @@ def plot_lowpass_highpass(F, lp_mask, hp_mask, lp_img, hp_img, path):
 
 
 def plot_effect_of_radius(img, F, radii, path):
-    """Extra: bigger radius -> low-pass keeps more detail, high-pass keeps less."""
     fig, axes = plt.subplots(2, len(radii), figsize=(4 * len(radii), 8))
     for col, r in enumerate(radii):
         lp_mask = circular_mask(img.shape, r)
@@ -108,7 +94,6 @@ def plot_effect_of_radius(img, F, radii, path):
 
 
 def plot_ideal_vs_gaussian(img, F, path):
-    """Extra: the sharp ideal mask creates ripples (ringing) near edges."""
     ideal = apply_mask(F, circular_mask(img.shape, CUTOFF))
     gauss = apply_mask(F, gaussian_lowpass(img.shape, CUTOFF))
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
@@ -118,9 +103,7 @@ def plot_ideal_vs_gaussian(img, F, path):
     save_fig(fig, path)
 
 
-# ------------------------------------------------------------------
-# Main entry point (called by main.py)
-# ------------------------------------------------------------------
+
 def run():
     print("Part 5: 2D Fourier & Image Filtering")
     if not config.IMAGE_PATH.exists():
@@ -130,23 +113,19 @@ def run():
 
     out = out_dir(5)
 
-    # 1) load the image as grayscale (OpenCV converts it while reading)
     img = load_gray_image()
     print(f"  Image size: {img.shape[1]} x {img.shape[0]} pixels")
 
-    # 2) 2D spectrum
     F = compute_spectrum(img)
     plot_spectrum(img, F, out / "01_original_and_spectrum.png")
 
-    # 3) ideal circular low-pass and high-pass
     lp_mask = circular_mask(img.shape, CUTOFF)
-    hp_mask = ~lp_mask                      # high-pass = everything the low-pass removes
+    hp_mask = ~lp_mask                      
     lp_img = apply_mask(F, lp_mask)
     hp_img = apply_mask(F, hp_mask)
     plot_lowpass_highpass(F, lp_mask, hp_mask, lp_img, hp_img,
                           out / "02_lowpass_highpass.png")
 
-    # extras
     plot_effect_of_radius(img, F, RADII, out / "03_effect_of_radius.png")
     plot_ideal_vs_gaussian(img, F, out / "04_ideal_vs_gaussian.png")
 
