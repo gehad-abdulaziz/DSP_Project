@@ -37,6 +37,8 @@ NUM_FREQ_POINTS = 1024   # FFT size used to evaluate the frequency response
 A_STABLE = 0.8           # |a| < 1 : the output decays
 A_UNSTABLE = 1.2         # |a| > 1 : the output grows without bound
 NUM_Y = 40               # number of output samples of the difference equation
+TOL_PADDED = 1e-10       # max allowed error between time and frequency methods (with padding)
+TOL_WRAP = 1e-3          # min error expected from circular wrap-around (without padding)
 
 
 # ------------------------------------------------------------------
@@ -235,8 +237,8 @@ def run():
     y_circ = convolve_freq_no_padding(noisy, h)
     print(f"  Max error with zero-padding    : {np.max(np.abs(y_time - y_freq)):.2e}")
     print(f"  Max error without zero-padding : {np.max(np.abs(y_time[:N] - y_circ)):.2e}")
-    assert np.max(np.abs(y_time - y_freq)) < 1e-10, "zero-padded result must match np.convolve"
-    assert np.max(np.abs(y_time[:N] - y_circ)) > 1e-3, "without padding the wrap-around must be visible"
+    assert np.max(np.abs(y_time - y_freq)) < TOL_PADDED, "zero-padded result must match np.convolve"
+    assert np.max(np.abs(y_time[:N] - y_circ)) > TOL_WRAP, "without padding the wrap-around must be visible"
     plot_domain_comparison(noisy, M_DEMO, out / "02_time_vs_frequency.png")
 
     # 3) frequency responses
