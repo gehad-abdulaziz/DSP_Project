@@ -14,18 +14,18 @@ from common.plot_utils import save_fig
 # ------------------------------------------------------------------
 # Settings (change these to experiment)
 # ------------------------------------------------------------------
-FS = 1000                # sampling frequency in Hz
-N = 200                  # number of samples of the test signal
-F_SIGNAL = 20            # frequency of the useful sinusoid in Hz
-NOISE_STD = 0.5          # standard deviation of the Gaussian noise
-M_VALUES = (3, 5, 11)    # moving average window lengths
-M_DEMO = 5               # window length used in the domain comparison
-NUM_FREQ_POINTS = 1024   # FFT size used to evaluate the frequency response
-A_STABLE = 0.8           # |a| < 1 : the output decays
-A_UNSTABLE = 1.2         # |a| > 1 : the output grows without bound
-NUM_Y = 40               # number of output samples of the difference equation
-TOL_PADDED = 1e-10       # max allowed error between time and frequency methods (with padding)
-TOL_WRAP = 1e-3          # min error expected from circular wrap-around (without padding)
+FS = 1000
+N = 200
+F_SIGNAL = 20
+NOISE_STD = 0.5
+M_VALUES = (3, 5, 11)
+M_DEMO = 5
+NUM_FREQ_POINTS = 1024
+A_STABLE = 0.8
+A_UNSTABLE = 1.2
+NUM_Y = 40
+TOL_PADDED = 1e-10
+TOL_WRAP = 1e-3
 
 
 # ------------------------------------------------------------------
@@ -154,7 +154,7 @@ def plot_domain_comparison(x, M, path):
     ax_mid.grid(True)
     ax_mid.legend()
 
-    # Error without zero-padding: wrap-around in the first M-1 samples
+    # Without zero-padding, the last M-1 samples wrap around onto the first M-1
     err_circ = np.abs(y_time[:len(x)] - y_circ)
     ax_bot.plot(err_circ, color="steelblue", label="|time - freq| without zero-padding")
     ax_bot.set_title(f"Without zero-padding the first M-1 = {M - 1} samples are corrupted")
@@ -230,7 +230,7 @@ def run():
 
     plot_frequency_responses(out / "03_frequency_response.png")
 
-    # 4) difference equation, verified against scipy.signal.lfilter
+    # Check the loop implementation against scipy.signal.lfilter
     impulse = unit_impulse(NUM_Y)
     for a in (A_STABLE, A_UNSTABLE):
         y_loop = difference_equation(impulse, a)
