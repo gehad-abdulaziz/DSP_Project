@@ -1,20 +1,7 @@
-"""Part 2 - Convolution & Difference Equations
+"""Part 2 - Convolution and difference equations.
 
-Tasks (from the project brief):
-  1. Apply a Moving Average filter using linear convolution (np.convolve).
-  2. Compare time-domain convolution with frequency-domain multiplication,
-     using zero-padding to obtain linear (not circular) convolution.
-  3. Implement a simple first-order difference equation.
-
-Extras: frequency response for several window lengths M, a demonstration of
-what happens without zero-padding, and stable vs unstable behaviour of the
-difference equation.
-
-Key relations:
-  Moving average      y[n] = (1/M) * sum_{k=0}^{M-1} x[n-k]   ->  h = ones(M)/M
-  Linear convolution  length(y) = N + M - 1
-  Convolution theorem y = IFFT( FFT(x, L) * FFT(h, L) ),  L >= N + M - 1
-  Difference equation y[n] = a*y[n-1] + x[n]   ->  impulse response h[n] = a^n
+Moving average filtering with np.convolve, linear convolution through the
+frequency domain (zero-padded FFT), and a first-order difference equation.
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -149,7 +136,6 @@ def plot_domain_comparison(x, M, path):
 
     fig, (ax_top, ax_mid, ax_bot) = plt.subplots(3, 1, figsize=(10, 10))
 
-    # Both methods overlaid
     ax_top.plot(y_time, color="navy", linewidth=3, label="Time domain (np.convolve)")
     ax_top.plot(y_freq, "--", color="deepskyblue", linewidth=1.5,
                 label="Frequency domain (zero-padded)")
@@ -160,7 +146,6 @@ def plot_domain_comparison(x, M, path):
     ax_top.set_ylim(-1.4, 2.0)
     ax_top.legend(loc="upper left", ncol=2)
 
-    # Error with zero-padding: only rounding noise
     ax_mid.semilogy(np.abs(y_time - y_freq) + 1e-20, color="royalblue",
                     label="|time - freq| with zero-padding")
     ax_mid.set_title("Difference between the two methods (floating point error only)")
@@ -227,14 +212,12 @@ def run():
     out = out_dir(2)
     print("Part 2: Convolution & Difference Equations")
 
-    # 1) signal and moving average
     n, clean, noisy = generate_signal(N)
     plot_moving_average(n, noisy, clean, out / "01_moving_average.png")
     for M in M_VALUES:
         y = moving_average_time(noisy, M)
         print(f"  M = {M:2d}: output length = {len(y)} (expected {N} + {M} - 1 = {N + M - 1})")
 
-    # 2) time domain vs frequency domain
     h = moving_average_kernel(M_DEMO)
     y_time = np.convolve(noisy, h, mode="full")
     y_freq = convolve_freq(noisy, h)
@@ -245,7 +228,6 @@ def run():
     assert np.max(np.abs(y_time[:N] - y_circ)) > TOL_WRAP, "without padding the wrap-around must be visible"
     plot_domain_comparison(noisy, M_DEMO, out / "02_time_vs_frequency.png")
 
-    # 3) frequency responses
     plot_frequency_responses(out / "03_frequency_response.png")
 
     # 4) difference equation, verified against scipy.signal.lfilter
